@@ -1,3 +1,5 @@
+import './polyfills';
+
 import styles from './assets/scss/app.scss';
 import {App} from "./app";
 
