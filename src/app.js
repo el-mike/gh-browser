@@ -1,6 +1,11 @@
 import './assets/scss/app.scss';
 import $ from 'cash-dom';
 
+import {
+  UsernameInput,
+  LoadButton,
+} from './components';
+
 const selectors = {
   LOAD_USERNAME: '.load-username',
   USERNAME_INPUT: '.username.input',
@@ -12,10 +17,24 @@ const selectors = {
 
 export class App {
   initializeApp() {
-    $(selectors.LOAD_USERNAME).on('click', () => {
-      const userName = $(selectors.USERNAME_INPUT).val();
+    this.usernameInput = new UsernameInput($(selectors.USERNAME_INPUT));
+    this.loadButton = new LoadButton($(selectors.LOAD_USERNAME));
 
-      fetch(`https://api.github.com/users/${userName}`)
+    this.usernameInput.init();
+
+    this.loadButton.on('click', () => {
+      /**
+       * Additional validation - username input is validated on keyup and blur,
+       * but user can hit load button without typing anything, therefore we need to fire
+       * validation also on load button click.
+       */
+      this.usernameInput.validate();
+
+      if (!this.usernameInput.valid) {
+        return;
+      }
+
+      fetch(`https://api.github.com/users/${this.usernameInput.getValue()}`)
         .then(response => response.json())
         .then(body => {
           this.profile = body;
