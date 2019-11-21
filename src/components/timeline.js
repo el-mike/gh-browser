@@ -1,10 +1,14 @@
 import {
+  Hideable,
+} from './hideable';
+
+import {
   getTimelineItem,
 } from './timeline-item';
 
-export class Timeline {
+export class Timeline extends Hideable {
   constructor(element) {
-    this.element = element;
+    super(element);
   }
 
   render(events) {

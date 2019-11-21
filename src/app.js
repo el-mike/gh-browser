@@ -5,16 +5,16 @@ import {
   UsernameInput,
   LoadButton,
   Timeline,
+  Profile,
+  LoadingIndicator,
 } from './components';
 
 const selectors = {
   LOAD_USERNAME: '.load-username',
   USERNAME_INPUT: '.username.input',
-  PROFILE_NAME: '#profile-name',
-  PROFILE_IMAGE: '#profile-image',
-  PROFILE_URL: '#profile-url',
-  PROFILE_BIO: '#profile-bio',
   TIMELINE: '#user-timeline',
+  PROFILE: '.profile',
+  LOADING_INDICATOR: '.loader',
 };
 
 export class App {
@@ -24,6 +24,9 @@ export class App {
   ) {
     this.config = config;
     this.githubService = githubService;
+
+    this.loaded = false;
+    this.loading = false;
   }
 
   initializeApp() {
@@ -31,6 +34,10 @@ export class App {
     this.loadButton = new LoadButton($(selectors.LOAD_USERNAME));
 
     this.timeline = new Timeline($(selectors.TIMELINE));
+    this.profile = new Profile($(selectors.PROFILE), $);
+    this.loadingIndicator = new LoadingIndicator($(selectors.LOADING_INDICATOR));
+
+    this.handleVisibility();
 
     this.loadButton.on('click', () => {
       /**
@@ -44,6 +51,10 @@ export class App {
         return;
       }
 
+      this.loading = true;
+
+      this.handleVisibility();
+
       const username = this.usernameInput.getValue();
 
       /**
@@ -51,22 +62,34 @@ export class App {
        * description, that the second request should be fired "After user data has been loaded".
        */
       this.githubService.getUser(username)
-        .then(profile => this.profile = profile)
+        .then(profile => this.profile.updateProfile(profile))
         .then(() => this.githubService.getUserEvents(username))
-        .then(events => {
-          this.updateProfile();
-
+        .then(events =>
           this.timeline.render(
             events.filter(event => this.config.events.includes(event.type))
           )
+        )
+        .finally(() => {
+          this.loading = false;
+          this.loaded = true;
+
+          this.handleVisibility();
+        })
+        .catch(() => {
+          this.loading = false;
+          this.loaded = false;
+
+          this.handleVisibility();
         });
     });
   }
 
-  updateProfile() {
-    $(selectors.PROFILE_NAME).text($(selectors.USERNAME_INPUT).val());
-    $(selectors.PROFILE_IMAGE).attr('src', this.profile.avatar_url);
-    $(selectors.PROFILE_URL).attr('href', this.profile.html_url).text(this.profile.login);
-    $(selectors.PROFILE_BIO).text(this.profile.bio || '(no information)');
+  handleVisibility() {
+    const showContent = this.loaded && !this.loading;
+
+    this.timeline.toggleVisibility(showContent);
+    this.profile.toggleVisibility(showContent);
+
+    this.loadingIndicator.toggleVisibility(this.loading);
   }
 }
