@@ -75,7 +75,9 @@ export class App {
 
           this.handleVisibility();
         })
-        .catch(() => {
+        .catch(error => {
+          console.error(error);
+
           this.loading = false;
           this.loaded = false;
 
