@@ -16,7 +16,8 @@ const config = {
 
   output: {
     path: path.resolve(__dirname, 'dist'),
-    filename: './assets/js/[name].bundle.js'
+    filename: './assets/js/[name].bundle.js',
+    pathinfo: false,
   },
 
   module: {
@@ -90,7 +91,7 @@ const config = {
     open: true
   },
 
-  devtool: 'inline-source-map'
+  devtool: 'cheap-source-map'
 
 };
 
