@@ -4,6 +4,7 @@ import $ from 'cash-dom';
 import {
   UsernameInput,
   LoadButton,
+  Timeline,
 } from './components';
 
 const selectors = {
@@ -12,15 +13,24 @@ const selectors = {
   PROFILE_NAME: '#profile-name',
   PROFILE_IMAGE: '#profile-image',
   PROFILE_URL: '#profile-url',
-  PROFILE_BIO: '#profile-bio'
+  PROFILE_BIO: '#profile-bio',
+  TIMELINE: '#user-timeline',
 };
 
 export class App {
+  constructor(
+    config,
+    githubService,
+  ) {
+    this.config = config;
+    this.githubService = githubService;
+  }
+
   initializeApp() {
     this.usernameInput = new UsernameInput($(selectors.USERNAME_INPUT));
     this.loadButton = new LoadButton($(selectors.LOAD_USERNAME));
 
-    this.usernameInput.init();
+    this.timeline = new Timeline($(selectors.TIMELINE));
 
     this.loadButton.on('click', () => {
       /**
@@ -34,11 +44,21 @@ export class App {
         return;
       }
 
-      fetch(`https://api.github.com/users/${this.usernameInput.getValue()}`)
-        .then(response => response.json())
-        .then(body => {
-          this.profile = body;
+      const username = this.usernameInput.getValue();
+
+      /**
+       * Those two requests could actually go in parallel, but it's specified in the task's
+       * description, that the second request should be fired "After user data has been loaded".
+       */
+      this.githubService.getUser(username)
+        .then(profile => this.profile = profile)
+        .then(() => this.githubService.getUserEvents(username))
+        .then(events => {
           this.updateProfile();
+
+          this.timeline.render(
+            events.filter(event => this.config.events.includes(event.type))
+          )
         });
     });
   }

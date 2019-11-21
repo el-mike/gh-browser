@@ -4,9 +4,7 @@ export class UsernameInput {
   constructor(element) {
     this.element = element;
     this.valid = false;
-  }
 
-  init() {
     this.element.on('keyup blur', () => this.validate());
   }
 
